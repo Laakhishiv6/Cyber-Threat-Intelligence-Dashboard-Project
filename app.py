@@ -4,13 +4,13 @@ import csv
 import time
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"  # Needed for session management
+app.secret_key = "your_secret_key"
 
-# Function to generate random IP addresses
+
 def generate_random_ip():
     return f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}"
 
-# Simulate a larger set of CVE data (100 entries)
+
 def get_cve_data():
     cve_data = []
     vulnerability_types = [
@@ -23,7 +23,7 @@ def get_cve_data():
         "Information Disclosure", "Privilege Escalation", 
         "Data Manipulation", "Unauthorized Access"
     ]
-    for i in range(1, 101):  # Generating 100 entries
+    for i in range(1, 101):  
         cve_data.append({
             "id": f"CVE-2025-{1000+i}",
             "description": f"Vulnerability {i} identified in the software running on IP {generate_random_ip()} with a {random.choice(vulnerability_types)} vulnerability, which could allow an attacker to exploit the system.",
@@ -35,10 +35,10 @@ def get_cve_data():
         })
     return cve_data
 
-# User database (temporary, for demo purposes)
+
 users = {"admin": {"password": "password123", "feedbacks": []}}
 
-# Routes
+
 @app.route('/')
 def index():
     return render_template('index.html')
