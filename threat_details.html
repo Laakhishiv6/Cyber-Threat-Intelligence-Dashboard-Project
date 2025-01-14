@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ threat.id }} Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .threat-details {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        .threat-details p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .threat-details strong {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="threat-details">
+        <h2>{{ threat.id }} - {{ threat.category }}</h2>
+        <p><strong>Description:</strong> {{ threat.description }}</p>
+        <p><strong>Severity:</strong> {{ threat.severity }}</p>
+        <p><strong>Impact:</strong> {{ threat.impact }}</p>
+        <p><strong>Solution:</strong> {{ threat.solution }}</p>
+        <p><strong>Date Identified:</strong> {{ threat.date }}</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Threat Intelligence Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #212529;
+            color: #dee2e6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 1000px;
+            margin-top: 30px;
+            background-color: #343a40;
+            border-radius: 12px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container h3 {
+            color: #6ea8fe;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #6ea8fe;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.3s, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #8bb9fe;
+            transform: scale(1.05);
+        }
+
+        button:active {
+            background-color: #084298;
+            transform: scale(1);
+        }
+
+        .dark-mode-toggle {
+            background-color: #333;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        input[type="text"], textarea {
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        textarea {
+            height: 120px;
+        }
+
+        .dark-mode {
+            background-color: #121212;
+            color: #e5e5e5;
+        }
+
+        .dark-mode .container {
+            background-color: #1f1f1f;
+        }
+
+        .dark-mode input[type="text"], .dark-mode textarea {
+            background-color: #333;
+            color: white;
+        }
+
+        canvas {
+            margin-top: 30px;
+            width: 100% !important;
+            max-width: 800px;
+        }
+
+        .user-info {
+            margin-bottom: 20px;
+            color: #6ea8fe;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cyber Threat Intelligence Dashboard</h1>
+
+    <div class="container">
+        <div class="user-info">
+            {% if session.username %}
+                <p>Welcome, {{ session.username }}! <a href="/logout" style="color: #6ea8fe;">Logout</a></p>
+            {% else %}
+                <a href="/login" style="color: #6ea8fe;">Login</a>
+            {% endif %}
+        </div>
+
+        <button id="fetch-threats">Fetch Threat Data</button>
+        <button id="predict-threats">Predict Threat Level</button>
+        <button id="download-data">Download Threat Data</button>
+
+        <h3>Search CVE</h3>
+        <input type="text" id="search-query" placeholder="Search CVE ID or description" />
+        <button id="search-button">Search</button>
+
+        <div id="output"></div>
+
+        <div class="feedback">
+            <h3>User Feedback</h3>
+            <textarea id="feedback-text" placeholder="Enter your feedback here"></textarea>
+            <select id="feedback-rating">
+                <option value="1">1 - Poor</option>
+                <option value="2">2 - Fair</option>
+                <option value="3">3 - Good</option>
+                <option value="4">4 - Very Good</option>
+                <option value="5">5 - Excellent</option>
+            </select>
+            <button id="submit-feedback">Submit Feedback</button>
+            <div id="feedback-response"></div>
+        </div>
+
+        <canvas id="threat-chart"></canvas>
+    </div>
+
+    <script>
+        let isDarkMode = false;
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+        }
+
+        document.getElementById('fetch-threats').addEventListener('click', () => {
+            fetch('/api/threats')
+                .then(response => response.json())
+                .then(data => {
+                    let output = '<h3>Threats:</h3>';
+                    data.forEach(threat => {
+                        output += `<p><strong><a href="/threat/${threat.id}">${threat.id}</a></strong>: ${threat.description} (Severity: ${threat.severity}, Category: ${threat.category}, Date: ${threat.date})</p>`;
+                    });
+                    document.getElementById('output').innerHTML = output;
+
+                    const severityCounts = { High: 0, Medium: 0, Low: 0 };
+                    data.forEach(threat => severityCounts[threat.severity]++);
+                    const ctx = document.getElementById('threat-chart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(severityCounts),
+                            datasets: [{
+                                label: 'Severity Levels',
+                                data: Object.values(severityCounts),
+                                backgroundColor: ['#ff4d4d', '#ffa500', '#4caf50']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { enabled: true }
+                            }
+                        }
+                    });
+                });
+        });
+
+        document.getElementById('predict-threats').addEventListener('click', () => {
+            fetch('/api/predict-threats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('output').innerHTML = `<h3>Predicted Threat Level:</h3><p>${data.prediction}</p>`;
+                });
+        });
+
+        document.getElementById('download-data').addEventListener('click', () => {
+            fetch('/api/download-data')
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                });
+        });
+
+        document.getElementById('search-button').addEventListener('click', () => {
+            const query = document.getElementById('search-query').value;
+            fetch(`/search?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    let output = '<h3>Search Results:</h3>';
+                    data.forEach(threat => {
+                        output += `<p><strong><a href="/threat/${threat.id}">${threat.id}</a></strong>: ${threat.description} (Severity: ${threat.severity}, Category: ${threat.category})</p>`;
+                    });
+                    document.getElementById('output').innerHTML = output;
+                });
+        });
+
+        document.getElementById('submit-feedback').addEventListener('click', () => {
+            const feedback = document.getElementById('feedback-text').value;
+            const rating = document.getElementById('feedback-rating').value;
+            if (feedback) {
+                fetch('/api/user-feedback', {
+                    method: 'POST',
+                    body: new URLSearchParams({ feedback: feedback, rating: rating }),
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('feedback-response').innerHTML = data.message;
+                });
+            } else {
+                alert('Please provide feedback before submitting.');
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
